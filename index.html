@@ -117,6 +117,7 @@ select option{background:#1d1b2e;color:#fff}select:focus-visible{outline:2px sol
 :root{--bnd:radial-gradient(at 80% 15%,rgba(106,212,255,.4) 0,transparent 55%),radial-gradient(at 10% 90%,rgba(99,102,241,.5) 0,transparent 55%),linear-gradient(135deg,#0b1a4a,#1d4ed8 55%,#6366f1)}
 .sp-r input.tg:checked{background:#3b82f6}.ck{color:#bae6fd!important}
 #sp{background:radial-gradient(at 50% 0,#1a2760,transparent 60%),#070a16}
+.dim{opacity:.5}#tb button{font-size:13px;padding:8px 2px}
 </style>
 </head>
 <body>
@@ -127,14 +128,18 @@ select option{background:#1d1b2e;color:#fff}select:focus-visible{outline:2px sol
 <header class="ptop"><div class="brand"><label id="av" aria-label="Аватарка: нажми, чтобы выбрать фото"><input id="avfile" type="file" accept="image/*"><img alt="" hidden><span class="ph">+</span></label><div class="bc"><div class="bw"><span class="bn">Levelarium</span><span class="bv"></span></div><div class="greet" id="greet"></div></div><button class="gear" id="gear" aria-label="Настройки">⚙</button></div></header>
 <section id="v-q">
 <h1>Задания дня</h1>
-<section class="card hero"><div class="rk" id="rk">E</div><div class="hi"><small id="nm"></small><b id="lv"></b><div class="bar"><i id="xb"></i></div><small id="xp"></small></div></section>
+<section class="card hero"><div class="rk" id="rk">E</div><div class="hi"><small id="nm"></small><b id="lv"></b><div class="bar"><i id="xb"></i></div><small id="xp"></small><small id="mlt" style="display:block"></small></div></section>
 <section class="card"><div class="top"><span class="n" id="dayl"></span><span class="l" id="dayst"></span></div><div class="ctl" style="margin-top:10px"><button id="nextday">Следующий день</button><button class="sec" id="undoday" hidden>Вернуть день</button></div></section>
 <section class="card"><div class="top"><span class="n" id="dn"></span></div><div id="qs"></div></section>
+<h1>Бонусные задания</h1>
+<section class="card"><small>Раз в день. Ранг задания задаёт длину зелья: чем сложнее, тем дольше действует</small><div id="bonq"></div></section>
 <h1>Задания месяца</h1>
 <section class="card"><div class="top"><span class="n" id="mn"></span><span class="l" id="mdays"></span></div><div id="mqs"></div></section>
 <div class="card add"><button id="addbtn" aria-label="Добавить квест">+</button>
 <div class="ctl" id="addform" hidden style="margin-top:12px;flex-wrap:wrap"><select id="newtype" aria-label="Тип квеста" style="flex:1 1 100%"><option value="d">Дневной (+25 XP)</option><option value="m">Месячный (+150 XP)</option></select><input id="newname" placeholder="Название" aria-label="Название"><input id="newgoal" type="number" inputmode="numeric" min="1" placeholder="Цель" aria-label="Цель" style="max-width:90px"><button id="newok">Готово</button></div></div>
 </section>
+<section id="v-b" hidden><h1>Монстры</h1><section class="card"><small id="mtot"></small><small style="display:block">Каждого монстра можно победить раз в день. Победить может только тот, у кого опыта всего не меньше силы монстра.</small><div id="mons"></div></section></section>
+<section id="v-i" hidden><h1>Инвентарь</h1><section class="card"><div class="top"><span class="n">Зелья</span></div><div id="potl"></div></section><section class="card"><div class="top"><span class="n">Снаряжение</span><span class="l" id="pas"></span></div><div id="gl"></div></section></section>
 <section id="v-s" hidden>
 <h1>Статистика</h1>
 <section class="card"><div class="kv"><div><small>Серия дней</small><b id="sk"></b></div><div><small>Уровень</small><b id="sl"></b></div><div><small>Ранг</small><b id="sr"></b></div></div></section>
@@ -142,7 +147,7 @@ select option{background:#1d1b2e;color:#fff}select:focus-visible{outline:2px sol
 <section class="card"><small>Дни месяца: ярко-синий — все квесты, светлый — часть, красный — пропуск</small><div class="cal" id="cal"></div></section>
 </section>
 </main>
-<nav id="tb"><button data-t="q" aria-current="page">Квесты</button><button data-t="s" aria-current="false">Статистика</button></nav>
+<nav id="tb"><button data-t="q" aria-current="page">Квесты</button><button data-t="b" aria-current="false">Монстры</button><button data-t="i" aria-current="false">Инвентарь</button><button data-t="s" aria-current="false">Статистика</button></nav>
 <div id="sp" hidden><div class="sp-in">
 <button id="spback" aria-label="Назад">←</button><h2 id="sptitle">Настройки</h2>
 <div class="sp-page" id="sp-main">
@@ -163,37 +168,62 @@ select option{background:#1d1b2e;color:#fff}select:focus-visible{outline:2px sol
 </div></div>
 <script>
 (function(){
-var VER='v1.1',K='lvl',RK=['E','D','C','B','A','S'],$=function(i){return document.getElementById(i)},arm='',ar2=0;
+var VER='v1.2',K='lvl',RK=['E','D','C','B','A','S'],$=function(i){return document.getElementById(i)},arm='',ar2=0;
 var DD=[['Приседания',100],['Отжимания',50],['Пресс',50],['Бег, км',3]];
+var PM=[5,10,15,30,60],PX=[1.2,1.3,1.5,1.7,2],TR=['E','D','C','B','A'];
+var BT=[['b1','Прогулка 8 000 шагов',0],['b2','Растяжка 15 минут',1],['b3','30 подтягиваний',2],['b4','Тренировка без перерыва 45 минут',3],['b5','Тренировка 90 минут',4]];
+var MO=[['s1','Слизень',0,0,5],['s2','Паук-падальщик',0,30,8],['s3','Гоблин-разведчик',0,60,10],['s4','Крыса-переросток',0,90,12],['g1','Гоблин-воин',1,2300,25],['g2','Болотный паук',1,2600,30],['o1','Орк-рубака',2,7000,45],['o2','Тёмный эльф',2,7600,50],['t1','Тролль',3,14000,90],['t2','Виверна',3,15000,100],['m1','Минотавр',4,24000,160],['d1','Древний дракон',5,36000,260]];
+var GR=[['k1','Кинжал новичка','w',.1,1],['a1','Кожаная броня','a',.1,1],['k2','Кинжал теней','w',.2,3],['a2','Кольчуга стража','a',.2,3]];
 function ds(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 function dim(){var d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).getDate()}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return'&#'+c.charCodeAt(0)+';'})}
 function lg(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function need(l){return 100+25*(l-1)}
+function ri(){return Math.min(5,(S.lv-1)/10|0)}
 function mkD(){return DD.map(function(q){return{n:q[0],g:q[1],d:0,ok:0,xp:25}})}
 function mkM(){return DD.map(function(q){return{n:q[0]+' за месяц',g:q[1]*20,d:0,ok:0,xp:150,src:q[0]}}).concat([{n:'Идеальных дней',g:20,d:0,ok:0,xp:300,src:'*',auto:1}])}
-function fresh(){var t=new Date();return{lv:1,xp:0,streak:0,real:ds(t),month:ds(t).slice(0,7),dn:t.getDate(),adv:0,bonus:0,pen:0,hist:[],cal:{},undo:null,qs:mkD(),mq:mkM()}}
+function fresh(){var t=new Date();return{lv:1,xp:0,tot:0,streak:0,real:ds(t),month:ds(t).slice(0,7),dn:t.getDate(),adv:0,bonus:0,pen:0,hist:[],cal:{},undo:null,qs:mkD(),mq:mkM(),pot:[0,0,0,0,0],gear:[],eq:{w:'',a:''},bst:{m:1,u:0},bd:{},kd:{}}}
 var S;try{S=JSON.parse(lg(K))}catch(e){}
-function norm(){if(!S||!S.qs)S=fresh();var f=fresh();if(!S.mq)S.mq=f.mq;if(!Array.isArray(S.hist))S.hist=[];if(!S.cal)S.cal={};if(!S.month){S.month=f.month;S.dn=f.dn}if(!S.real)S.real=f.real;S.adv=S.adv||0;S.qs.concat(S.mq).forEach(function(q){if(!q.xp)q.xp=25})}
+function norm(){if(!S||!S.qs)S=fresh();var f=fresh();if(!S.mq)S.mq=f.mq;if(!Array.isArray(S.hist))S.hist=[];if(!S.cal)S.cal={};if(!S.month){S.month=f.month;S.dn=f.dn}if(!S.real)S.real=f.real;S.adv=S.adv||0;
+if(!S.tot){S.tot=S.xp;for(var l=1;l<S.lv;l++)S.tot+=need(l)}
+S.pot=S.pot||[0,0,0,0,0];S.gear=S.gear||[];S.eq=S.eq||{w:'',a:''};S.bst=S.bst||{m:1,u:0};S.bd=S.bd||{};S.kd=S.kd||{};
+S.qs.concat(S.mq).forEach(function(q){if(!q.xp)q.xp=25})}
 norm();
 function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
-function need(l){return 100+25*(l-1)}
 function done(){return S.qs.filter(function(q){return q.ok}).length}
 function snap(){var u=S.undo;S.undo=null;var j=JSON.stringify(S);S.undo=u;return j}
 var tt;function toast(s){var t=$('toast');t.textContent=s;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on')},2600)}
-function gain(x){S.xp+=x;var up=0;while(S.xp>=need(S.lv)){S.xp-=need(S.lv);S.lv++;up++}toast(up?'Новый уровень: '+S.lv+'!':'+'+x+' XP')}
+function pas(){var m=1;GR.forEach(function(g){if(S.eq.w===g[0]||S.eq.a===g[0])m+=g[3]});return m}
+function mult(){return pas()*(Date.now()<S.bst.u?S.bst.m:1)}
+function fmt(ms){var s=Math.ceil(ms/1000),m=Math.floor(s/60);s%=60;return m+':'+('0'+s).slice(-2)}
+function gain(x){var y=Math.round(x*mult());S.xp+=y;S.tot+=y;var up=0;while(S.xp>=need(S.lv)){S.xp-=need(S.lv);S.lv++;up++}toast(up?'Новый уровень: '+S.lv+'!':'+'+y+' XP');return y}
 function fin(q){if(q.d>=q.g&&!q.ok){q.ok=1;gain(q.xp)}}
 function closeDay(){var u=snap();S.cal[S.dn]=S.bonus?2:done()?1:0;S.hist.push({d:done(),t:S.qs.length});if(S.hist.length>30)S.hist.shift();
 if(!S.bonus){S.streak=0;S.xp=Math.max(0,S.xp-30);S.pen=1}
 S.qs.forEach(function(q){q.d=0;q.ok=0});S.bonus=0;S.dn++;S.undo=u}
-function roll(){var t=ds(new Date());if(S.real===t)return;if(S.adv>0)S.adv--;else closeDay();S.real=t;var m=t.slice(0,7);
+function roll(){var t=ds(new Date());if(S.real===t)return;if(S.adv>0)S.adv--;else closeDay();S.real=t;S.bd={};S.kd={};var m=t.slice(0,7);
 if(S.month!==m){S.month=m;S.dn=1;S.cal={};S.mq.forEach(function(q){q.d=0;q.ok=0})}save()}
 function pen(){if(S.pen){S.pen=0;save();setTimeout(function(){toast('Штраф −30 XP: не все квесты выполнены')},900)}}
 function addQ(k,i,v){var q=(k==='m'?S.mq:S.qs)[i];if(!q||!(v>0))return;q.d+=v;fin(q);
 if(k==='d')S.mq.forEach(function(m){if(m.src===q.n){m.d+=v;fin(m)}});
 if(S.qs.length&&done()===S.qs.length&&!S.bonus){S.bonus=1;S.streak++;S.mq.forEach(function(m){if(m.src==='*'){m.d++;fin(m)}});gain(50);toast('Все квесты дня выполнены: +50 XP')}
 save();render()}
+function bonusDone(id){var b=BT.filter(function(x){return x[0]===id})[0];if(!b||S.bd[id])return;S.bd[id]=1;S.pot[b[2]]++;save();render();toast('Получено зелье '+PM[b[2]]+' мин')}
+function drink(i){if(!S.pot[i])return;S.pot[i]--;var n=Date.now(),cur=n<S.bst.u?S.bst.m:1;S.bst={m:Math.max(cur,PX[i]),u:Math.max(n,S.bst.u)+PM[i]*6e4};save();render();toast('Зелье ×'+PX[i]+' на '+PM[i]+' мин')}
+function equip(id){var g=GR.filter(function(x){return x[0]===id})[0];if(!g||S.gear.indexOf(id)<0)return;S.eq[g[2]]=S.eq[g[2]]===id?'':id;save();render()}
+function mstate(m){if(S.kd[m[0]])return'done';if(m[2]>ri())return'rank';if(S.tot<m[3])return'lock';return'ok'}
+function kill(id){var m=MO.filter(function(x){return x[0]===id})[0];if(!m||mstate(m)!=='ok')return;S.kd[id]=1;var y=gain(m[4]),msg=m[1]+' побеждён, +'+y+' XP';
+if(Math.random()<.25){var t=Math.min(4,m[2]);S.pot[t]++;msg+=', зелье '+PM[t]+' мин'}
+var c=GR.filter(function(g){return g[4]<=m[2]&&S.gear.indexOf(g[0])<0});if(c.length&&Math.random()<.1){var g=c[Math.floor(Math.random()*c.length)];S.gear.push(g[0]);msg+=', найдено: '+g[1]}
+save();render();toast(msg)}
 function qrow(q,i,k){var a=' data-k="'+k+'" data-i="'+i+'"';return'<div class="q"><div class="top"><span class="n">'+esc(q.n)+'</span><span class="l">'+q.d+' / '+q.g+(q.ok?' ✓':', +'+q.xp+' XP')+'</span>'+(q.auto?'':'<button class="x"'+a+' data-c="r" aria-label="Удалить">✕</button>')+'</div><div class="bar"><i style="width:'+Math.min(100,q.d/q.g*100)+'%"></i></div>'+(q.auto?'':'<div class="ctl"><input type="number" inputmode="numeric" min="1" placeholder="Сколько сделал" id="in'+k+i+'" aria-label="Повторов"><button'+a+' data-c="a">Добавить</button><button class="sec"'+a+' data-c="f">Всё</button></div>')+'</div>'}
-function render(){var n=need(S.lv),r=RK[Math.min(5,(S.lv-1)/10|0)],D=dim(),dn=Math.min(S.dn,D);
+function rBon(){$('bonq').innerHTML=BT.map(function(b){return'<div class="q"><div class="top"><span class="n">'+esc(b[1])+'</span><span class="l">ранг '+TR[b[2]]+' · зелье '+PM[b[2]]+' мин</span></div><div class="ctl" style="justify-content:flex-end">'+(S.bd[b[0]]?'<small>выполнено ✓</small>':'<button data-b="'+b[0]+'">Выполнено</button>')+'</div></div>'}).join('')}
+function rMon(){$('mons').innerHTML=MO.map(function(m){var s=mstate(m),t=s==='ok'?'<button data-m="'+m[0]+'">Победить</button>':'<small>'+(s==='done'?'побеждён сегодня':s==='rank'?'нужен ранг '+RK[m[2]]:'нужно опыта всего '+m[3]+' (ещё '+(m[3]-S.tot)+')')+'</small>';
+return'<div class="q'+(s==='ok'?'':' dim')+'"><div class="top"><span class="n">'+esc(m[1])+'</span><span class="l">ранг '+RK[m[2]]+' · +'+m[4]+' XP</span></div><div class="ctl" style="justify-content:flex-end;align-items:center">'+t+'</div></div>'}).join('');$('mtot').textContent='Опыт всего: '+S.tot}
+function rPot(){$('potl').innerHTML=PM.map(function(p,i){return'<div class="q"><div class="top"><span class="n">Зелье '+p+' мин</span><span class="l">×'+PX[i]+' · '+S.pot[i]+' шт.</span></div><div class="ctl" style="justify-content:flex-end"><button data-p="'+i+'"'+(S.pot[i]?'':' disabled')+'>Выпить</button></div></div>'}).join('')}
+function rGear(){$('pas').textContent='Пассив: ×'+pas().toFixed(2);$('gl').innerHTML=GR.map(function(g){var on=S.eq[g[2]]===g[0],own=S.gear.indexOf(g[0])>=0;return'<div class="q"><div class="top"><span class="n">'+esc(g[1])+'</span><span class="l">'+(g[2]==='w'?'оружие':'броня')+' +'+Math.round(g[3]*100)+'%</span></div><div class="ctl" style="justify-content:flex-end">'+(own?'<button data-g="'+g[0]+'"'+(on?'':' class="sec"')+'>'+(on?'Снять':'Надеть')+'</button>':'<small>не найдено</small>')+'</div></div>'}).join('')}
+function tick(){var n=Date.now(),on=n<S.bst.u;$('mlt').textContent='Множитель XP ×'+mult().toFixed(2)+(on?' · зелье ×'+S.bst.m+', ещё '+fmt(S.bst.u-n):'')}
+function render(){var n=need(S.lv),r=RK[ri()],D=dim(),dn=Math.min(S.dn,D);
 $('rk').textContent=r;$('nm').textContent=lg('lvl_name')||'Охотник';$('lv').textContent='Уровень '+S.lv;$('xb').style.width=Math.round(S.xp/n*100)+'%';$('xp').textContent=S.xp+' / '+n+' XP';
 $('dayl').textContent='День '+dn+' из '+D;$('dayst').textContent='Серия: '+S.streak+' дн.';$('undoday').hidden=!S.undo;
 $('dn').textContent='Выполнено: '+done()+' из '+S.qs.length;
@@ -202,25 +232,32 @@ $('mn').textContent='Выполнено: '+S.mq.filter(function(q){return q.ok})
 $('mqs').innerHTML=S.mq.map(function(q,i){return qrow(q,i,'m')}).join('');
 $('sk').textContent=S.streak;$('sl').textContent=S.lv;$('sr').textContent=r;
 var H=S.hist.slice(-6).concat([{d:done(),t:S.qs.length}]),h='';H.forEach(function(e,j){var p=e.t?Math.round(e.d/e.t*100):0,x=S.dn-(H.length-1-j);h+='<div class="col"><i style="height:'+Math.max(4,p)+'%"></i><small>'+(x>0?x:'')+'</small></div>'});$('chart').innerHTML=h;
-var c='';for(var j=1;j<=D;j++)c+='<i class="'+(j===dn?'tdy ':'')+(j<S.dn&&S.cal[j]!==undefined?'c'+S.cal[j]:'')+'">'+j+'</i>';$('cal').innerHTML=c}
-$('v-q').onclick=function(ev){var b=ev.target.closest('button[data-c]');if(!b)return;var d=b.dataset,L=d.k==='m'?S.mq:S.qs,i=+d.i,q=L[i];if(!q)return;
+var c='';for(var j=1;j<=D;j++)c+='<i class="'+(j===dn?'tdy ':'')+(j<S.dn&&S.cal[j]!==undefined?'c'+S.cal[j]:'')+'">'+j+'</i>';$('cal').innerHTML=c;
+rBon();rMon();rPot();rGear();tick()}
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('button');if(!b)return;var d=b.dataset;
+if(d.c){var L=d.k==='m'?S.mq:S.qs,i=+d.i,q=L[i];if(!q)return;
 if(d.c==='a')addQ(d.k,i,parseInt($('in'+d.k+i).value,10));
 else if(d.c==='f')addQ(d.k,i,Math.max(0,q.g-q.d));
 else if(arm!==d.k+i){arm=d.k+i;toast('Нажми ✕ ещё раз, чтобы удалить');setTimeout(function(){arm=''},3000)}
-else{arm='';L.splice(i,1);save();render()}};
+else{arm='';L.splice(i,1);save();render()}}
+else if(d.b!==undefined)bonusDone(d.b);
+else if(d.p!==undefined)drink(+d.p);
+else if(d.g!==undefined)equip(d.g);
+else if(d.m!==undefined)kill(d.m)});
 $('addbtn').onclick=function(){$('addform').hidden=!$('addform').hidden};
 $('newok').onclick=function(){var n=$('newname').value.trim(),g=parseInt($('newgoal').value,10),m=$('newtype').value==='m';if(!n||!(g>0))return toast('Введи название и цель');
 var q={n:n,g:g,d:0,ok:0,xp:m?150:25};if(m&&S.qs.some(function(x){return x.n===n}))q.src=n;(m?S.mq:S.qs).push(q);$('newname').value=$('newgoal').value='';$('addform').hidden=true;save();render()};
-$('nextday').onclick=function(){closeDay();S.adv++;save();pen();render()};
+$('nextday').onclick=function(){closeDay();S.adv++;S.bd={};S.kd={};save();pen();render()};
 $('undoday').onclick=function(){if(!S.undo)return;S=JSON.parse(S.undo);S.undo=null;S.real=ds(new Date());norm();save();render()};
 [].forEach.call(document.querySelectorAll('#tb button'),function(b){b.onclick=function(){var t=b.dataset.t;
-[].forEach.call(document.querySelectorAll('#tb button'),function(x){x.setAttribute('aria-current',x===b?'page':'false')});$('v-q').hidden=t!=='q';$('v-s').hidden=t!=='s';window.scrollTo(0,0)}});
+[].forEach.call(document.querySelectorAll('#tb button'),function(x){x.setAttribute('aria-current',x===b?'page':'false')});['q','b','i','s'].forEach(function(k){$('v-'+k).hidden=t!==k});window.scrollTo(0,0)}});
 $('bkexp').onclick=function(){var t=$('bk');t.value=JSON.stringify(S);t.select()};
 $('bkimp').onclick=function(){try{var o=JSON.parse($('bk').value);if(!o||!Array.isArray(o.qs))throw 0;S=o;norm();save();render();$('bk').value='Готово, данные восстановлены'}catch(e){$('bk').value='Не получилось: вставьте сюда текст копии целиком'}};
 $('rst').onclick=function(){if(!ar2){ar2=1;toast('Нажми ещё раз: весь прогресс удалится');setTimeout(function(){ar2=0},4000);return}ar2=0;S=fresh();save();render();toast('Прогресс сброшен')};
-roll();render();pen();
+document.querySelectorAll('.ver,.bv').forEach(function(e){e.textContent=VER});if($('spf'))$('spf').textContent='Levelarium '+VER+' · by Makso812';
+roll();render();pen();setInterval(tick,1000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden){roll();render();pen()}});
-var b=$('boot'),p=b.querySelector('.bp'),f=b.querySelector('.bb i'),n=0,TIPS=['Выполняй все квесты дня: бонус +50 XP и серия растёт.','Пропущенный день обнуляет серию и забирает 30 XP.','Месячные квесты копятся из дневных и дают намного больше XP.','Эффекты дождя включаются в настройках, а запотевшее стекло стирается пальцем.'];
+var b=$('boot'),p=b.querySelector('.bp'),f=b.querySelector('.bb i'),n=0,TIPS=['Выполняй все квесты дня: бонус +50 XP и серия растёт.','Пропущенный день обнуляет серию и забирает 30 XP.','Месячные квесты копятся из дневных и дают намного больше XP.','Монстров можно победить раз в день, если опыта всего хватает.'];
 b.querySelector('.tip').textContent=TIPS[Math.floor(Math.random()*TIPS.length)];
 var t=setInterval(function(){n+=4;if(n>=100){n=100;clearInterval(t);setTimeout(function(){b.classList.add('out')},250)}p.textContent=n+'%';f.style.width=n+'%';b.setAttribute('aria-valuenow',n)},40);
 })();
